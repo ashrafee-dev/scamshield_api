@@ -1,4 +1,3 @@
-from openai import OpenAI
 import json
 from config import client
 
