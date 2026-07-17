@@ -13,6 +13,7 @@ def get_assesment(transcription: str) -> riskAssesment | None:
         assesment = None
         try:
             assesment = riskAssesment(**response)
+
         except ValidationError as e:
             print(e.errors())
 

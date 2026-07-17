@@ -1,12 +1,15 @@
 import json
+from services.filter import filter_sensitive
 from config import client
 
 
 def ask_deepseek(promt):
+    promt =  filter_sensitive(promt)
+    print(promt)
     response = client.chat.completions.create(
     model="deepseek-v4-flash",
     messages=[
-        {"role": "system", "content": f"""Analyze the following- {promt}
+        {"role": "system", "content": f"""Analyze the following (Sensitive informations were filtered.)  - {promt}
 
                                         Return ONLY valid JSON in exactly this format:
     {{
