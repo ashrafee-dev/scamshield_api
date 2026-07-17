@@ -8,6 +8,7 @@ dependencies = [
     "fastapi[standard]>=0.139.0",
     "ffmpeg>=1.4",
     "ffmpeg-python>=0.2.0",
+    "filetype>=1.2.0",
     "openai>=2.45.0",
     "openai-whisper>=20250625",
 ]
