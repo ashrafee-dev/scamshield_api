@@ -1,7 +1,6 @@
 import os
 import filetype
 from fastapi import APIRouter, UploadFile, WebSocket, WebSocketDisconnect
-
 from models.request import information
 from services.risk import get_assesment
 from services.transcription import audio_transcript
@@ -10,7 +9,6 @@ router = APIRouter()
 
 @router.post("/email")
 def check_name(item: information):
-    #check if item.sender in redis
     return get_assesment(item.body)
 
 @router.post("/audio")
@@ -50,7 +48,8 @@ async def websocket_endpoint(websocket: WebSocket):
             if kind:
                 print(kind.mime)
             if kind is None or kind.mime not in Allowed:
-                raise ValueError("Not allowed type")
+                print("Not allowed type")
+                continue
             filename = f"temp_audio/audio{file_count}.{kind.extension}"
             with open(filename, "wb") as f:
                 f.write(byte)
