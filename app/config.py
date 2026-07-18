@@ -2,6 +2,8 @@
 import os
 from openai import OpenAI
 
+MAX_REQUEST_LIMIT = 100
+RATE_LIMIT_WINDOW = 60
 
 client = OpenAI(
     api_key=os.environ.get('DEEPSEEK_API_KEY'),
