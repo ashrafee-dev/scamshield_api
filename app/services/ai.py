@@ -1,9 +1,10 @@
 import json
+from typing import Any
 from services.filter import filter_sensitive
 from config import client
 
 
-def ask_deepseek(promt):
+def ask_deepseek(promt) ->dict[str,Any] | None:
     promt =  filter_sensitive(promt)
     print(promt)
     response = client.chat.completions.create(
