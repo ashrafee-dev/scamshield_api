@@ -9,7 +9,7 @@ def check_rate_limit(ip :str) -> bool:
     user = r.hgetall(ip)
     if user:
         if  int(user["NUM_REQUESTS"]) <= 0:
-            if 120 >= now - float(user["LAST_REQUEST_TIME"]) >= 60: 
+            if 60 > now - float(user["LAST_REQUEST_TIME"]): 
                 return False
             else:
                 r.hset(ip,mapping={
