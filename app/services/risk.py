@@ -6,7 +6,7 @@ from services.ai import ask_deepseek
 
 
 def get_assesment(transcription: str) -> riskAssesment | None:
-    for i in range(5):
+    for _ in range(5):
         response = ask_deepseek(transcription)
         if response is None:
             continue

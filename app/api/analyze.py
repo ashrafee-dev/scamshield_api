@@ -1,6 +1,7 @@
 import os
 import filetype
 from fastapi import APIRouter, UploadFile, WebSocket, WebSocketDisconnect
+from models.response import riskAssesment
 from models.request import information
 from services.risk import get_assesment
 from services.transcription import audio_transcript
@@ -8,11 +9,11 @@ from services.transcription import audio_transcript
 router = APIRouter()
 
 @router.post("/email")
-def check_name(item: information):
+def check_name(item: information)-> riskAssesment | None:
     return get_assesment(item.body)
 
 @router.post("/audio")
-async def audio_check(file:UploadFile):
+async def audio_check(file:UploadFile)-> riskAssesment | None:
     byte = await file.read()
     filename = f"{file.filename}"
     with open(filename, "wb") as f:
@@ -23,7 +24,7 @@ async def audio_check(file:UploadFile):
     return get_assesment(transcript)
 
 @router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket)-> riskAssesment | None:
     await websocket.accept()
 
     Allowed = {
