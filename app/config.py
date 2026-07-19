@@ -2,7 +2,7 @@
 import os
 from openai import OpenAI
 
-MAX_REQUEST_LIMIT = 100
+MAX_REQUEST_LIMIT = 2
 RATE_LIMIT_WINDOW = 60
 
 client = OpenAI(

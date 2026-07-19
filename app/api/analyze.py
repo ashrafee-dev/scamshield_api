@@ -1,6 +1,7 @@
 import os
 import filetype
-from fastapi import APIRouter, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, UploadFile, WebSocket, WebSocketDisconnect, Request
+from services import rate_limit
 from models.response import riskAssesment
 from models.request import information
 from services.risk import get_assesment
@@ -9,11 +10,16 @@ from services.transcription import audio_transcript
 router = APIRouter()
 
 @router.post("/email")
-def check_name(item: information)-> riskAssesment | None:
+def check_name(item: information, request: Request)-> riskAssesment | dict | None:
+    if not rate_limit.check_rate_limit(request.client.host):
+        return {"error": "Reached you limit, wait 60 seconds before requesting again"}
     return get_assesment(item.body)
 
 @router.post("/audio")
-async def audio_check(file:UploadFile)-> riskAssesment | None:
+async def audio_check(file:UploadFile, request: Request)-> riskAssesment | dict | None:
+
+    if not rate_limit.check_rate_limit(request.client.host):
+        return {"error": "Reached you limit, wait 60 seconds before requesting again"}
     byte = await file.read()
     filename = f"{file.filename}"
     with open(filename, "wb") as f:
@@ -24,8 +30,9 @@ async def audio_check(file:UploadFile)-> riskAssesment | None:
     return get_assesment(transcript)
 
 @router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket)-> riskAssesment | None:
+async def websocket_endpoint(websocket: WebSocket)-> riskAssesment | str | None:
     await websocket.accept()
+
 
     Allowed = {
         "audio/mpeg",
@@ -42,6 +49,9 @@ async def websocket_endpoint(websocket: WebSocket)-> riskAssesment | None:
         while True:
 
             byte = await websocket.receive_bytes()
+            if not rate_limit.check_rate_limit(websocket.client.host):
+                await websocket.send_json({"error": "Reached you limit, wait 60 seconds before requesting again"})
+                continue
             kind = filetype.guess(byte) 
             if kind:
                 print(kind.mime)
