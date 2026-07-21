@@ -2,23 +2,38 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
-// https://astro.build/config
 export default defineConfig({
   integrations: [
     starlight({
-      title: 'Documentation',
-      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/withastro/starlight' }],
+      title: 'ScamShield Documentation',
+
+      social: [
+        {
+          icon: 'github',
+          label: 'GitHub',
+          href: 'https://github.com/<your-github-username>/<your-repo>',
+        },
+      ],
+
       sidebar: [
         {
           label: 'Guides',
           items: [
-            // Each item here is one entry in the navigation menu.
-            { label: 'Example Guide', slug: 'guides/example' },
+            {
+              label: 'Quick Start',
+              slug: 'guides/quickstart',
+            },
           ],
         },
         {
           label: 'Reference',
-          items: [{ autogenerate: { directory: 'reference' } }],
+          items: [
+            {
+              autogenerate: {
+                directory: 'reference',
+              },
+            },
+          ],
         },
       ],
     }),
