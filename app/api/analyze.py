@@ -40,7 +40,8 @@ async def audio_check(file:UploadFile, request: Request)-> riskAssesment | dict 
     if kind is None or kind.mime not in Allowed:
         print("Not allowed type")
         return
-    filename = f"audio.{kind.extension}"
+    tmp_dir = "/dev/shm/" if os.path.exists("/dev/shm") else ""
+    filename = f"{tmp_dir}audio.{kind.extension}"
     with open(filename, "wb") as f:
         f.write(byte)
     transcript = audio_transcript(filename)
@@ -66,7 +67,8 @@ async def websocket_endpoint(websocket: WebSocket)-> riskAssesment | str | None:
             if kind is None or kind.mime not in Allowed:
                 print("Not allowed type")
                 continue
-            filename = f"audio{file_count}.{kind.extension}"
+            tmp_dir = "/dev/shm/" if os.path.exists("/dev/shm") else ""
+            filename = f"{tmp_dir}audio{file_count}.{kind.extension}"
             with open(filename, "wb") as f:
                 f.write(byte)
             transcript = audio_transcript(filename)
