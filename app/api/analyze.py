@@ -1,4 +1,5 @@
 import io
+import filetype
 from fastapi import APIRouter, UploadFile, WebSocket, WebSocketDisconnect, Request
 from services import rate_limit
 from models.response import riskAssesment
@@ -31,17 +32,6 @@ async def audio_check(file:UploadFile, request: Request)-> riskAssesment | dict 
 async def websocket_endpoint(websocket: WebSocket)-> riskAssesment | str | None:
     await websocket.accept()
 
-
-    Allowed = {
-        "audio/mpeg",
-        "audio/m4a",
-        "audio/mp4",
-        "audio/wav",
-        "audio/x-wav",
-        "audio/webm",
-        "audio/ogg",
-        "audio/flac",
-    }
     file_count = 0
     try:
         while True:
