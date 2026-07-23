@@ -9,11 +9,22 @@ from services.transcription import audio_transcript
 
 router = APIRouter()
 
+Allowed = {
+    "audio/mpeg",
+    "audio/m4a",
+    "audio/mp4",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/webm",
+    "audio/ogg",
+    "audio/flac",
+}
+
 @router.post("/email")
 def email_check(item: information, request: Request)-> riskAssesment | dict | None:
     assert request.client is not None
     if not rate_limit.check_rate_limit(request.client.host):
-        return {"error": "Reached you limit, wait 60 seconds before requesting again"}
+        return {"error": "Reached your limit, wait 60 seconds before requesting again"}
     return get_assesment(item.body)
 
 @router.post("/audio")
@@ -21,7 +32,7 @@ async def audio_check(file:UploadFile, request: Request)-> riskAssesment | dict 
 
     assert request.client is not None
     if not rate_limit.check_rate_limit(request.client.host):
-        return {"error": "Reached you limit, wait 60 seconds before requesting again"}
+        return {"error": "Reached your limit, wait 60 seconds before requesting again"}
     byte = await file.read()
 
     file_stream =  io.BytesIO(byte)
@@ -40,7 +51,7 @@ async def websocket_endpoint(websocket: WebSocket)-> riskAssesment | str | None:
 
             assert websocket.client is not None
             if not rate_limit.check_rate_limit(websocket.client.host):
-                await websocket.send_json({"error": "Reached you limit, wait 60 seconds before requesting again"})
+                await websocket.send_json({"error": "Reached your limit, wait 60 seconds before requesting again"})
                 continue
 
             file_stream =  io.BytesIO(byte)
