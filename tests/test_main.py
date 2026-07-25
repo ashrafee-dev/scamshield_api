@@ -41,14 +41,10 @@ def audio():
         yield audio.read()
 
 
-@pytest.mark.asyncio
-async def test1(audio):
-    url = "ws://localhost:8000/ws"
-    async with connect(url) as websockets:
-        await websockets.send(audio)
-        response = await websockets.recv()
-        result = json.loads(response)
-
+def test1(audio):
+    with client.websocket_connect("/ws") as websocket:
+        websocket.send_bytes(audio)
+        result = websocket.receive_json()
         assert "label" in result
         assert "score" in result
         assert "certainty" in result

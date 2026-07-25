@@ -1,5 +1,5 @@
 import redis
-from config import MAX_REQUEST_LIMIT,RATE_LIMIT_WINDOW
+from app.config import MAX_REQUEST_LIMIT,RATE_LIMIT_WINDOW
 import time
 r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 

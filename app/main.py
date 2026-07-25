@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from api import analyze
+from app.api import analyze
 
     # if item.sender in r.get("numbers"):
     #     return 

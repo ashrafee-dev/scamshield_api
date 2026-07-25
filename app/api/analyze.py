@@ -1,11 +1,11 @@
 import os
 import filetype
 from fastapi import APIRouter, HTTPException, WebSocketException, UploadFile, WebSocket, WebSocketDisconnect, Request
-from services import rate_limit
-from models.response import riskAssessment
-from models.request import information
-from services.risk import get_assessment
-from services.transcription import audio_transcript
+from app.services import rate_limit
+from app.models.response import riskAssessment
+from app.models.request import information
+from app.services.risk import get_assessment
+from app.services.transcription import audio_transcript
 
 router = APIRouter()
 
