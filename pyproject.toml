@@ -13,3 +13,6 @@ dependencies = [
     "openai-whisper>=20250625",
     "redis>=8.0.1",
 ]
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

@@ -1,7 +1,7 @@
 import json
 from typing import Any
-from services.filter import filter_sensitive
-from config import client
+from app.services.filter import filter_sensitive
+from app.config import client
 
 
 def ask_deepseek(prompt: str) -> dict[str, Any] | None:

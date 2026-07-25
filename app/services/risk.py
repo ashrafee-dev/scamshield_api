@@ -1,8 +1,8 @@
 
 from pydantic import ValidationError
 
-from models.response import riskAssessment
-from services.ai import ask_deepseek
+from app.models.response import riskAssessment
+from app.services.ai import ask_deepseek
 
 
 def get_assessment(transcription: str) -> riskAssessment | None:
