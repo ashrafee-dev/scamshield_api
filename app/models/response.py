@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Literal
 
-class riskAssesment(BaseModel):
+class riskAssessment(BaseModel):
     label : Literal["Scam" , "Scam Likely" , "Safe"]
     score : Literal["High" , "Low" , "Medium"]
     certainty:int 
