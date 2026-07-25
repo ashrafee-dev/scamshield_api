@@ -4,28 +4,34 @@ from services.filter import filter_sensitive
 from config import client
 
 
-def ask_deepseek(promt) -> dict[str, Any] | None:
-    promt = filter_sensitive(promt)
-    print(promt)
+def ask_deepseek(prompt: str) -> dict[str, Any] | None:
+    prompt = filter_sensitive(prompt)
     response = client.chat.completions.create(
         model="deepseek-v4-flash",
         messages=[
             {
                 "role": "system",
-                "content": f"""Analyze the following (Sensitive informations were filtered.)  - {promt}
+                "content": f"""Analyze the following message. Sensitive information has been filtered.
 
-                                        Return ONLY valid JSON in exactly this format:
-    {{
+                Message:
+                {prompt}
 
-                                        "label" "Scam" | "Scam Likely" | "Safe",
-                                        "score": "High" | "Medium" | "Low",
-                                        "certainty": integer
-                                        "reason" : str
-                                        }}
+                Return ONLY a JSON object in exactly this format:
 
-                                        Return ONLY a JSON object.
-                                        Do NOT wrap the JSON in quotes.
-                                        Do NOT escape quotation marks.""",
+                {{
+                "label": "Scam",
+                "score": "High",
+                "certainty": 95,
+                "reason": "Brief explanation."
+                }}
+
+                Rules:
+                - label must be one of: "Scam", "Scam Likely", or "Safe"
+                - score must be one of: "High", "Medium", or "Low"
+                - certainty must be an integer between 0 and 100
+                - reason must be a string
+                - Do not include any additional fields.
+                """
             }
         ],
         response_format={"type": "json_object"},
