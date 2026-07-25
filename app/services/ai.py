@@ -4,13 +4,15 @@ from services.filter import filter_sensitive
 from config import client
 
 
-def ask_deepseek(promt) ->dict[str,Any] | None:
-    promt =  filter_sensitive(promt)
+def ask_deepseek(promt) -> dict[str, Any] | None:
+    promt = filter_sensitive(promt)
     print(promt)
     response = client.chat.completions.create(
-    model="deepseek-v4-flash",
-    messages=[
-        {"role": "system", "content": f"""Analyze the following (Sensitive informations were filtered.)  - {promt}
+        model="deepseek-v4-flash",
+        messages=[
+            {
+                "role": "system",
+                "content": f"""Analyze the following (Sensitive informations were filtered.)  - {promt}
 
                                         Return ONLY valid JSON in exactly this format:
     {{
@@ -23,15 +25,16 @@ def ask_deepseek(promt) ->dict[str,Any] | None:
 
                                         Return ONLY a JSON object.
                                         Do NOT wrap the JSON in quotes.
-                                        Do NOT escape quotation marks."""}
-    ]
-    #stream=True
-    #reasoning_effort="high",
-    #extra_body={"thinking": {"type": "disabled"}}
-    ) 
+                                        Do NOT escape quotation marks.""",
+            }
+        ],
+        response_format={"type": "json_object"},
+        # stream=True
+        # reasoning_effort="high",
+        # extra_body={"thinking": {"type": "disabled"}}
+    )
     if response.choices[0].message.content is None:
         return
 
     response = json.loads(response.choices[0].message.content)
     return response
-
