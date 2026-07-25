@@ -1,73 +1,82 @@
 import os
 import filetype
-from fastapi import APIRouter, UploadFile, WebSocket, WebSocketDisconnect, Request
+from fastapi import APIRouter, HTTPException, WebSocketException, UploadFile, WebSocket, WebSocketDisconnect, Request
 from services import rate_limit
-from models.response import riskAssesment
+from models.response import riskAssessment
 from models.request import information
-from services.risk import get_assesment
+from services.risk import get_assessment
 from services.transcription import audio_transcript
 
 router = APIRouter()
 
+Allowed = {
+    "audio/mpeg",
+    "audio/m4a",
+    "audio/mp4",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/webm",
+    "audio/ogg",
+    "audio/flac",
+}
+
 @router.post("/email")
-def email_check(item: information, request: Request)-> riskAssesment | dict | None:
+def email_check(item: information, request: Request)-> riskAssessment | dict | None:
+    assert request.client is not None
     if not rate_limit.check_rate_limit(request.client.host):
-        return {"error": "Reached you limit, wait 60 seconds before requesting again"}
-    return get_assesment(item.body)
+        raise HTTPException (status_code= 429, detail= {"error":"Reached your limit, wait 60 seconds before requesting again"})
+    return get_assessment(item.body)
 
 @router.post("/audio")
-async def audio_check(file:UploadFile, request: Request)-> riskAssesment | dict | None:
+async def audio_check(file:UploadFile, request: Request)-> riskAssessment | dict | None:
 
+
+    assert request.client is not None
     if not rate_limit.check_rate_limit(request.client.host):
-        return {"error": "Reached you limit, wait 60 seconds before requesting again"}
+        raise HTTPException (status_code= 429, detail= {"error":"Reached your limit, wait 60 seconds before requesting again"})
     byte = await file.read()
-    filename = f"{file.filename}"
+    kind = filetype.guess(byte)
+
+    if kind is None or kind.mime not in Allowed:
+        raise HTTPException (status_code= 415, detail= {"error":"Content type not allowed"})
+    tmp_dir = "/dev/shm/" if os.path.exists("/dev/shm") else ""
+    filename = f"{tmp_dir}audio.{kind.extension}"
     with open(filename, "wb") as f:
         f.write(byte)
     transcript = audio_transcript(filename)
     os.remove(filename)
-    return get_assesment(transcript)
+    return get_assessment(transcript)
 
 @router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket)-> riskAssesment | str | None:
+async def websocket_endpoint(websocket: WebSocket)-> riskAssessment | str | None:
     await websocket.accept()
 
-
-    Allowed = {
-        "audio/mpeg",
-        "audio/m4a",
-        "audio/mp4",
-        "audio/wav",
-        "audio/x-wav",
-        "audio/webm",
-        "audio/ogg",
-        "audio/flac",
-    }
     file_count = 0
     try:
         while True:
 
             byte = await websocket.receive_bytes()
+
+            assert websocket.client is not None
             if not rate_limit.check_rate_limit(websocket.client.host):
-                await websocket.send_json({"error": "Reached you limit, wait 60 seconds before requesting again"})
-                continue
+                raise WebSocketException(code = 1008, reason="Reached your limit, wait 60 seconds before requesting again")
             kind = filetype.guess(byte) 
-            if kind:
-                print(kind.mime)
+
             if kind is None or kind.mime not in Allowed:
-                print("Not allowed type")
+                await websocket.send_json({"error": "Content type not allowed"})
                 continue
-            filename = f"audio{file_count}.{kind.extension}"
+            tmp_dir = "/dev/shm/" if os.path.exists("/dev/shm") else ""
+            filename = f"{tmp_dir}audio{file_count}.{kind.extension}"
             with open(filename, "wb") as f:
                 f.write(byte)
             transcript = audio_transcript(filename)
             os.remove(filename)
             file_count += 1
-            assesment =  get_assesment(transcript)
-            if assesment is None: 
-                await websocket.send_json({"error": "Assessment failed"})
+            assessment =  get_assessment(transcript)
+            if assessment is None: 
+                await websocket.send_json({"error": "Failed to analyze the audio. Try again"})
             else:
-                await websocket.send_json(assesment.model_dump())
+                await websocket.send_json(assessment.model_dump())
     except WebSocketDisconnect:
         print("Client disconnected")
 
