@@ -1,20 +1,20 @@
 
 from pydantic import ValidationError
 
-from models.response import riskAssesment
+from models.response import riskAssessment
 from services.ai import ask_deepseek
 
 
-def get_assesment(transcription: str) -> riskAssesment | None:
+def get_assessment(transcription: str) -> riskAssessment | None:
     for _ in range(5):
         response = ask_deepseek(transcription)
         if response is None:
             continue
-        assesment = None
+        assessment = None
         try:
-            assesment = riskAssesment(**response)
+            assessment = riskAssessment(**response)
 
         except ValidationError as e:
             print(e.errors())
 
-        return assesment
+        return assessment
