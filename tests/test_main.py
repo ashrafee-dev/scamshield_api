@@ -1,7 +1,7 @@
-from app.main import app
 from fastapi.testclient import TestClient
 import pytest
 
+from app.main import app
 client = TestClient(app)
 
 
@@ -38,9 +38,9 @@ def audio():
         yield audio.read()
 
 
-def test1(audio):
+def test1(audiofile):
     with client.websocket_connect("/ws") as websocket:
-        websocket.send_bytes(audio)
+        websocket.send_bytes(audiofile)
         result = websocket.receive_json()
         assert "label" in result
         assert "score" in result
