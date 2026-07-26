@@ -1,9 +1,6 @@
 from app.main import app
 from fastapi.testclient import TestClient
-import asyncio
 import pytest
-from websockets.asyncio.client import connect
-import json
 
 client = TestClient(app)
 
