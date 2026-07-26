@@ -33,14 +33,14 @@ def test_audio_check():
 
 
 @pytest.fixture
-def audio():
+def audio_bytes():
     with open(r"tests/test_audio.m4a", "rb") as audio:
         yield audio.read()
 
 
-def test1(audiofile):
+def test1(audio_bytes):
     with client.websocket_connect("/ws") as websocket:
-        websocket.send_bytes(audiofile)
+        websocket.send_bytes(audio_bytes)
         result = websocket.receive_json()
         assert "label" in result
         assert "score" in result
