@@ -1,4 +1,5 @@
 import os
+import asyncio
 import filetype
 from fastapi import APIRouter, HTTPException, WebSocketException, UploadFile, WebSocket, WebSocketDisconnect, Request
 from app.services import rate_limit
@@ -6,7 +7,7 @@ from app.models.response import riskAssessment
 from app.models.request import information
 from app.services.risk import get_assessment
 from app.services.transcription import audio_transcript
-
+import uuid
 router = APIRouter()
 
 Allowed = {
@@ -28,19 +29,19 @@ def email_check(item: information, request: Request)-> riskAssessment | dict | N
     return get_assessment(item.body)
 
 @router.post("/audio")
-async def audio_check(file:UploadFile, request: Request)-> riskAssessment | dict | None:
+def audio_check(file:UploadFile, request: Request)-> riskAssessment | dict | None:
 
 
     assert request.client is not None
     if not rate_limit.check_rate_limit(request.client.host):
         raise HTTPException (status_code= 429, detail= {"error":"Reached your limit, wait 60 seconds before requesting again"})
-    byte = await file.read()
+    byte =  file.file.read()
     kind = filetype.guess(byte)
 
     if kind is None or kind.mime not in Allowed:
         raise HTTPException (status_code= 415, detail= {"error":"Content type not allowed"})
     tmp_dir = "/dev/shm/" if os.path.exists("/dev/shm") else ""
-    filename = f"{tmp_dir}audio.{kind.extension}"
+    filename = f"{tmp_dir}audio{uuid.uuid4()}.{kind.extension}"
     with open(filename, "wb") as f:
         f.write(byte)
     transcript = audio_transcript(filename)
@@ -51,7 +52,6 @@ async def audio_check(file:UploadFile, request: Request)-> riskAssessment | dict
 async def websocket_endpoint(websocket: WebSocket)-> riskAssessment | str | None:
     await websocket.accept()
 
-    file_count = 0
     try:
         while True:
 
@@ -66,13 +66,12 @@ async def websocket_endpoint(websocket: WebSocket)-> riskAssessment | str | None
                 await websocket.send_json({"error": "Content type not allowed"})
                 continue
             tmp_dir = "/dev/shm/" if os.path.exists("/dev/shm") else ""
-            filename = f"{tmp_dir}audio{file_count}.{kind.extension}"
+            filename = f"{tmp_dir}audio{uuid.uuid4()}.{kind.extension}"
             with open(filename, "wb") as f:
                 f.write(byte)
-            transcript = audio_transcript(filename)
+            transcript = await asyncio.to_thread(audio_transcript,filename)
             os.remove(filename)
-            file_count += 1
-            assessment =  get_assessment(transcript)
+            assessment =  await asyncio.to_thread(get_assessment,transcript)
             if assessment is None: 
                 await websocket.send_json({"error": "Failed to analyze the audio. Try again"})
             else:
