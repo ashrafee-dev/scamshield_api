@@ -16,3 +16,8 @@ dependencies = [
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pylint>=4.0.6",
+]
