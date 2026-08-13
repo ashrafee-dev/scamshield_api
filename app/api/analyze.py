@@ -7,6 +7,7 @@ from app.models.response import riskAssessment
 from app.models.request import information
 from app.services.risk import get_assessment
 from app.services.transcription import audio_transcript
+from app.config import MAX_FILE_SIZE
 import uuid
 router = APIRouter()
 
@@ -36,6 +37,8 @@ def audio_check(file:UploadFile, request: Request)-> riskAssessment | dict | Non
     if not rate_limit.check_rate_limit(request.client.host):
         raise HTTPException (status_code= 429, detail= {"error":"Reached your limit, wait 60 seconds before requesting again"})
     byte =  file.file.read()
+    if len(byte) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail={"error": f"File too large. Max size is {MAX_FILE_SIZE // (1024 * 1024)}MB."})
     kind = filetype.guess(byte)
 
     if kind is None or kind.mime not in Allowed:
@@ -60,6 +63,9 @@ async def websocket_endpoint(websocket: WebSocket)-> riskAssessment | str | None
             assert websocket.client is not None
             if not rate_limit.check_rate_limit(websocket.client.host):
                 raise WebSocketException(code = 1008, reason="Reached your limit, wait 60 seconds before requesting again")
+            if len(byte) > MAX_FILE_SIZE:
+                await websocket.send_json({"error": f"File too large. Max size is {MAX_FILE_SIZE // (1024 * 1024)}MB."})
+                continue
             kind = filetype.guess(byte) 
 
             if kind is None or kind.mime not in Allowed:
